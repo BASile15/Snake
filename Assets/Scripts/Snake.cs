@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -37,35 +38,39 @@ public class Snake : MonoBehaviour
     void Start()
     {
         headRenderer = GetComponent<SpriteRenderer>();
-        headRenderer.sortingOrder = 10; 
+        headRenderer.sortingOrder = 10;
         InitSnake();
     }
 
     void InitSnake()
     {
         segments.Clear();
-        segments.Add(transform); 
+        segments.Add(transform);
         UpdateHeadSprite();
 
         Vector3 startPos = transform.position;
 
-        // Crée 2 corps + 1 queue (longueur totale = 4)
-        for (int i = 1; i <= 3; i++)
+        int initialBodyLength = 10; // ← le nombre de segments de corps au debut
+
+        // Crée le corps + queue
+        for (int i = 1; i <= initialBodyLength + 1; i++) // +1 pour la queue
         {
             Vector3 pos = startPos - new Vector3(direction.x * i, direction.y * i, 0f);
             Sprite sprite;
 
-            if (i == 3)
+            if (i == initialBodyLength + 1)
             {
+                // Queue
                 sprite = GetTailSprite();
             }
             else
             {
+                // Corps
                 sprite = (Mathf.Abs(direction.x) > 0) ? bodyHorizontal : bodyVertical;
             }
 
             Transform segment = CreateSegment(pos, sprite);
-            segment.GetComponent<SpriteRenderer>().sortingOrder = 9; 
+            segment.GetComponent<SpriteRenderer>().sortingOrder = 9;
             segments.Add(segment);
         }
     }
@@ -135,6 +140,8 @@ public class Snake : MonoBehaviour
         }
 
         UpdateBodySprites();
+
+        CheckSelfCollision();
     }
 
     void UpdateHeadSprite()
@@ -190,14 +197,35 @@ public class Snake : MonoBehaviour
         else tailSR.sprite = tailUp;
     }
 
-
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Wall"))
         {
-            UnityEngine.Debug.Log("GAME OVER");
-            gameObject.SetActive(false);
-            Time.timeScale = 0f;
+            Die("collision avec Wall");
         }
+    }
+
+    void CheckSelfCollision()
+    {
+        Vector3 headPos = segments[0].position;
+
+        for (int i = 1; i < segments.Count; i++)
+        {
+            if (segments[i].position == headPos)
+            {
+                Die("collision avec soi-même");
+            }
+        }
+    }
+
+    void Die(string reason)
+    {
+        UnityEngine.Debug.Log("GAME OVER (" + reason + ")");
+
+        foreach (Transform segment in segments)
+        {
+            segment.gameObject.SetActive(false);
+        }
+        Time.timeScale = 0f; 
     }
 }
