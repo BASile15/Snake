@@ -50,7 +50,7 @@ public class Snake : MonoBehaviour
 
         Vector3 startPos = transform.position;
 
-        int initialBodyLength = 10; // ← le nombre de segments de corps au debut
+        int initialBodyLength = 4; // ← le nombre de segments de corps au debut
 
         // Crée le corps + queue
         for (int i = 1; i <= initialBodyLength + 1; i++) // +1 pour la queue
