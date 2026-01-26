@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 public class Snake : MonoBehaviour
 {
-    private Vector2 direction = Vector2.right; // direction initiale
+    private Vector2 direction = Vector2.right;
     [SerializeField] private float moveDelay = 0.25f;
     private float timer;
 
@@ -37,15 +37,14 @@ public class Snake : MonoBehaviour
     void Start()
     {
         headRenderer = GetComponent<SpriteRenderer>();
-        headRenderer.sortingOrder = 10; // tête devant
+        headRenderer.sortingOrder = 10; 
         InitSnake();
     }
 
     void InitSnake()
     {
-        // Clear segments existants
         segments.Clear();
-        segments.Add(transform); // tête
+        segments.Add(transform); 
         UpdateHeadSprite();
 
         Vector3 startPos = transform.position;
@@ -66,7 +65,7 @@ public class Snake : MonoBehaviour
             }
 
             Transform segment = CreateSegment(pos, sprite);
-            segment.GetComponent<SpriteRenderer>().sortingOrder = 9; // corps/queue derrière la tête
+            segment.GetComponent<SpriteRenderer>().sortingOrder = 9; 
             segments.Add(segment);
         }
     }
@@ -165,7 +164,6 @@ public class Snake : MonoBehaviour
             Vector3 dirPrev = (segments[i].position - prev).normalized;
             Vector3 dirNext = (next - segments[i].position).normalized;
 
-            // Segment droit
             if ((dirPrev.x != 0 && dirNext.x != 0)) sr.sprite = bodyHorizontal;
             else if ((dirPrev.y != 0 && dirNext.y != 0)) sr.sprite = bodyVertical;
             else
