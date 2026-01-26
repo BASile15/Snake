@@ -197,6 +197,18 @@ public class Snake : MonoBehaviour
         else tailSR.sprite = tailUp;
     }
 
+    public bool Occupies(int x, int y)
+{
+    foreach (Transform segment in segments)
+    {
+        if (Mathf.RoundToInt(segment.position.x) == x && Mathf.RoundToInt(segment.position.y) == y)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Wall"))
