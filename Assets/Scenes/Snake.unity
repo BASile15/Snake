@@ -305,6 +305,10 @@ MonoBehaviour:
   headDown: {fileID: -6854801067047936884, guid: 096a6e5ef47074349954a29e6981eb51, type: 3}
   bodyHorizontal: {fileID: 5183476676852997877, guid: d93fe5e193b80f74986c3d2341821bda, type: 3}
   bodyVertical: {fileID: -8697133744877224016, guid: 1cfbe813156d0af42a62f64102aa2002, type: 3}
+  bodyTopLeft: {fileID: 2999098643290886539, guid: f467a946d3eb9f740a66f40455854dce, type: 3}
+  bodyTopRight: {fileID: -4986953961950147090, guid: 6c434420495d2ae4e99e2dc6e6121425, type: 3}
+  bodyBottomLeft: {fileID: 8171884408360701465, guid: 5f6f0491e6bf21848b051bcd6415e22e, type: 3}
+  bodyBottomRight: {fileID: -5512783819148346509, guid: 9857c72b81233a7468e35c1ea5d53ccb, type: 3}
   tailUp: {fileID: 2750249231403333431, guid: e14df5c8680729242b87a6c21238528f, type: 3}
   tailDown: {fileID: -444241385568439413, guid: 4a87422bb9ad0b64ba08c8ea39617857, type: 3}
   tailLeft: {fileID: -2542272835747916194, guid: 18c6fa690f70df042bba0f8a48c8a9bc, type: 3}
