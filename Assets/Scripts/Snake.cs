@@ -62,7 +62,7 @@ public class Snake : MonoBehaviour
         transform.position = GridToWorld(headGridPos);
         UpdateHeadSprite();
 
-        int initialBodyLength = 4;
+        int initialBodyLength = 1;
 
         for (int i = 1; i <= initialBodyLength + 1; i++)
         {
