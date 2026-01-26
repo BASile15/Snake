@@ -169,14 +169,14 @@ public class Snake : MonoBehaviour
             else
             {
                 // Coins personnalisés selon la position de la queue et direction
-                if (dirPrev.x > 0 && dirNext.y > 0) sr.sprite = bodyTopLeft;     // droite → haut
-                else if (dirPrev.x < 0 && dirNext.y > 0) sr.sprite = bodyTopRight; // gauche → haut
-                else if (dirPrev.x > 0 && dirNext.y < 0) sr.sprite = bodyBottomLeft; // droite → bas
-                else if (dirPrev.x < 0 && dirNext.y < 0) sr.sprite = bodyBottomRight; // gauche → bas
-                else if (dirPrev.y > 0 && dirNext.x > 0) sr.sprite = bodyTopRight; // haut → droite
-                else if (dirPrev.y > 0 && dirNext.x < 0) sr.sprite = bodyTopLeft;  // haut → gauche
-                else if (dirPrev.y < 0 && dirNext.x > 0) sr.sprite = bodyBottomRight; // bas → droite
-                else if (dirPrev.y < 0 && dirNext.x < 0) sr.sprite = bodyBottomLeft;  // bas → gauche
+                if (dirPrev.x > 0 && dirNext.y > 0) sr.sprite = bodyTopLeft;     // bas → droite good
+                else if (dirPrev.x < 0 && dirNext.y > 0) sr.sprite = bodyTopRight; // bas → droite good
+                else if (dirPrev.x > 0 && dirNext.y < 0) sr.sprite = bodyBottomLeft; // haut → gauche good
+                else if (dirPrev.x < 0 && dirNext.y < 0) sr.sprite = bodyBottomRight; // haut → droite good
+                else if (dirPrev.y > 0 && dirNext.x > 0) sr.sprite = bodyBottomRight; // gauche → bas good
+                else if (dirPrev.y > 0 && dirNext.x < 0) sr.sprite = bodyBottomLeft;  // droite → bas good
+                else if (dirPrev.y < 0 && dirNext.x > 0) sr.sprite = bodyTopRight; // droite → haut good
+                else if (dirPrev.y < 0 && dirNext.x < 0) sr.sprite = bodyTopLeft;  // gauche → haut
             }
         }
 
@@ -195,7 +195,7 @@ public class Snake : MonoBehaviour
     {
         if (other.CompareTag("Wall"))
         {
-            UnityEngine.Debug.Log("GAME OVER 💀");
+            UnityEngine.Debug.Log("GAME OVER");
             gameObject.SetActive(false);
             Time.timeScale = 0f;
         }
