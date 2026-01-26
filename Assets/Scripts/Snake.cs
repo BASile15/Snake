@@ -1,11 +1,17 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class Snake : MonoBehaviour
 {
-    private Vector2 direction = Vector2.right;
+    [Header("Grille")]
+    public Collider2D gridArea;
+    public int gridWidth = 17;
+    public int gridHeight = 15;
+
+    private Vector2Int direction = Vector2Int.right;
+    private Vector2Int headGridPos;
+
     [SerializeField] private float moveDelay = 0.25f;
     private float timer;
 
@@ -34,42 +40,40 @@ public class Snake : MonoBehaviour
 
     private SpriteRenderer headRenderer;
     private List<Transform> segments = new List<Transform>();
+    private List<Vector2Int> gridPositions = new List<Vector2Int>();
 
     void Start()
     {
         headRenderer = GetComponent<SpriteRenderer>();
         headRenderer.sortingOrder = 10;
+
         InitSnake();
     }
 
     void InitSnake()
     {
         segments.Clear();
+        gridPositions.Clear();
+
+        headGridPos = new Vector2Int(gridWidth / 2, gridHeight / 2);
+        gridPositions.Add(headGridPos);
         segments.Add(transform);
+
+        transform.position = GridToWorld(headGridPos);
         UpdateHeadSprite();
 
-        Vector3 startPos = transform.position;
+        int initialBodyLength = 4;
 
-        int initialBodyLength = 4; // ← le nombre de segments de corps au debut
-
-        // Crée le corps + queue
-        for (int i = 1; i <= initialBodyLength + 1; i++) // +1 pour la queue
+        for (int i = 1; i <= initialBodyLength + 1; i++)
         {
-            Vector3 pos = startPos - new Vector3(direction.x * i, direction.y * i, 0f);
-            Sprite sprite;
+            Vector2Int pos = headGridPos - direction * i;
+            gridPositions.Add(pos);
 
-            if (i == initialBodyLength + 1)
-            {
-                // Queue
-                sprite = GetTailSprite();
-            }
-            else
-            {
-                // Corps
-                sprite = (Mathf.Abs(direction.x) > 0) ? bodyHorizontal : bodyVertical;
-            }
+            Sprite sprite = (i == initialBodyLength + 1)
+                ? GetTailSprite()
+                : (direction.x != 0 ? bodyHorizontal : bodyVertical);
 
-            Transform segment = CreateSegment(pos, sprite);
+            Transform segment = CreateSegment(GridToWorld(pos), sprite);
             segment.GetComponent<SpriteRenderer>().sortingOrder = 9;
             segments.Add(segment);
         }
@@ -86,26 +90,16 @@ public class Snake : MonoBehaviour
     {
         var keyboard = Keyboard.current;
 
-        if (keyboard.wKey.wasPressedThisFrame && direction != Vector2.down)
-        {
-            direction = Vector2.up;
-            UpdateHeadSprite();
-        }
-        else if (keyboard.sKey.wasPressedThisFrame && direction != Vector2.up)
-        {
-            direction = Vector2.down;
-            UpdateHeadSprite();
-        }
-        else if (keyboard.aKey.wasPressedThisFrame && direction != Vector2.right)
-        {
-            direction = Vector2.left;
-            UpdateHeadSprite();
-        }
-        else if (keyboard.dKey.wasPressedThisFrame && direction != Vector2.left)
-        {
-            direction = Vector2.right;
-            UpdateHeadSprite();
-        }
+        if (keyboard.wKey.wasPressedThisFrame && direction != Vector2Int.down)
+            direction = Vector2Int.up;
+        else if (keyboard.sKey.wasPressedThisFrame && direction != Vector2Int.up)
+            direction = Vector2Int.down;
+        else if (keyboard.aKey.wasPressedThisFrame && direction != Vector2Int.right)
+            direction = Vector2Int.left;
+        else if (keyboard.dKey.wasPressedThisFrame && direction != Vector2Int.left)
+            direction = Vector2Int.right;
+
+        UpdateHeadSprite();
     }
 
     void FixedUpdate()
@@ -121,43 +115,62 @@ public class Snake : MonoBehaviour
 
     void Move()
     {
-        Vector3 prevPos = segments[0].position;
-        Vector3 nextPos;
+        Vector2Int newHeadPos = headGridPos + direction;
 
-        // Déplacer la tête
-        segments[0].position = new Vector3(
-            Mathf.Round(transform.position.x) + direction.x,
-            Mathf.Round(transform.position.y) + direction.y,
-            0f
-        );
-
-        // Déplacer le corps
-        for (int i = 1; i < segments.Count; i++)
+        // Collision murs (grille)
+        if (newHeadPos.x < 0 || newHeadPos.x >= gridWidth ||
+            newHeadPos.y < 0 || newHeadPos.y >= gridHeight)
         {
-            nextPos = segments[i].position;
-            segments[i].position = prevPos;
-            prevPos = nextPos;
+            Die("mur");
+            return;
+        }
+
+        // Collision avec soi-même
+        if (gridPositions.Contains(newHeadPos))
+        {
+            Die("soi-même");
+            return;
+        }
+
+        gridPositions.Insert(0, newHeadPos);
+        gridPositions.RemoveAt(gridPositions.Count - 1);
+
+        headGridPos = newHeadPos;
+
+        for (int i = 0; i < segments.Count; i++)
+        {
+            segments[i].position = GridToWorld(gridPositions[i]);
         }
 
         UpdateBodySprites();
+    }
 
-        CheckSelfCollision();
+    Vector3 GridToWorld(Vector2Int gridPos)
+    {
+        Bounds bounds = gridArea.bounds;
+        float cellWidth = bounds.size.x / gridWidth;
+        float cellHeight = bounds.size.y / gridHeight;
+
+        float x = bounds.min.x + cellWidth * (gridPos.x + 0.5f);
+        float y = bounds.min.y + cellHeight * (gridPos.y + 0.5f);
+
+        return new Vector3(x, y, 0f);
     }
 
     void UpdateHeadSprite()
     {
-        if (direction == Vector2.right) headRenderer.sprite = headRight;
-        else if (direction == Vector2.left) headRenderer.sprite = headLeft;
-        else if (direction == Vector2.up) headRenderer.sprite = headUp;
-        else if (direction == Vector2.down) headRenderer.sprite = headDown;
+        if (direction == Vector2Int.right) headRenderer.sprite = headRight;
+        else if (direction == Vector2Int.left) headRenderer.sprite = headLeft;
+        else if (direction == Vector2Int.up) headRenderer.sprite = headUp;
+        else if (direction == Vector2Int.down) headRenderer.sprite = headDown;
     }
 
     Sprite GetTailSprite()
     {
-        if (direction == Vector2.right) return tailLeft;
-        else if (direction == Vector2.left) return tailRight;
-        else if (direction == Vector2.up) return tailDown;
-        else return tailUp;
+        if (direction == Vector2Int.right) return tailLeft;
+        if (direction == Vector2Int.left) return tailRight;
+        if (direction == Vector2Int.up) return tailDown;
+        return tailUp;
     }
 
     void UpdateBodySprites()
@@ -165,79 +178,46 @@ public class Snake : MonoBehaviour
         for (int i = 1; i < segments.Count - 1; i++)
         {
             SpriteRenderer sr = segments[i].GetComponent<SpriteRenderer>();
-            Vector3 prev = segments[i - 1].position;
-            Vector3 next = segments[i + 1].position;
 
-            Vector3 dirPrev = (segments[i].position - prev).normalized;
-            Vector3 dirNext = (next - segments[i].position).normalized;
+            Vector2Int prev = gridPositions[i - 1];
+            Vector2Int curr = gridPositions[i];
+            Vector2Int next = gridPositions[i + 1];
 
-            if ((dirPrev.x != 0 && dirNext.x != 0)) sr.sprite = bodyHorizontal;
-            else if ((dirPrev.y != 0 && dirNext.y != 0)) sr.sprite = bodyVertical;
+            Vector2Int dirPrev = curr - prev;
+            Vector2Int dirNext = next - curr;
+
+            if (dirPrev.x != 0 && dirNext.x != 0) sr.sprite = bodyHorizontal;
+            else if (dirPrev.y != 0 && dirNext.y != 0) sr.sprite = bodyVertical;
             else
             {
-                // Coins personnalisés selon la position de la queue et direction
-                if (dirPrev.x > 0 && dirNext.y > 0) sr.sprite = bodyTopLeft;     // bas → droite good
-                else if (dirPrev.x < 0 && dirNext.y > 0) sr.sprite = bodyTopRight; // bas → droite good
-                else if (dirPrev.x > 0 && dirNext.y < 0) sr.sprite = bodyBottomLeft; // haut → gauche good
-                else if (dirPrev.x < 0 && dirNext.y < 0) sr.sprite = bodyBottomRight; // haut → droite good
-                else if (dirPrev.y > 0 && dirNext.x > 0) sr.sprite = bodyBottomRight; // gauche → bas good
-                else if (dirPrev.y > 0 && dirNext.x < 0) sr.sprite = bodyBottomLeft;  // droite → bas good
-                else if (dirPrev.y < 0 && dirNext.x > 0) sr.sprite = bodyTopRight; // droite → haut good
-                else if (dirPrev.y < 0 && dirNext.x < 0) sr.sprite = bodyTopLeft;  // gauche → haut
+                if (dirPrev.x == 1 && dirNext.y == 1 || dirPrev.y == -1 && dirNext.x == -1) sr.sprite = bodyTopLeft;
+                else if (dirPrev.x == -1 && dirNext.y == 1 || dirPrev.y == -1 && dirNext.x == 1) sr.sprite = bodyTopRight;
+                else if (dirPrev.x == 1 && dirNext.y == -1 || dirPrev.y == 1 && dirNext.x == -1) sr.sprite = bodyBottomLeft;
+                else sr.sprite = bodyBottomRight;
             }
         }
 
-        // Queue
         int last = segments.Count - 1;
         SpriteRenderer tailSR = segments[last].GetComponent<SpriteRenderer>();
-        Vector3 diff = segments[last - 1].position - segments[last].position;
-        if (diff.x > 0) tailSR.sprite = tailLeft;
-        else if (diff.x < 0) tailSR.sprite = tailRight;
-        else if (diff.y > 0) tailSR.sprite = tailDown;
+        Vector2Int diff = gridPositions[last - 1] - gridPositions[last];
+
+        if (diff.x == 1) tailSR.sprite = tailLeft;
+        else if (diff.x == -1) tailSR.sprite = tailRight;
+        else if (diff.y == 1) tailSR.sprite = tailDown;
         else tailSR.sprite = tailUp;
     }
 
     public bool Occupies(int x, int y)
-{
-    foreach (Transform segment in segments)
     {
-        if (Mathf.RoundToInt(segment.position.x) == x && Mathf.RoundToInt(segment.position.y) == y)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("Wall"))
-        {
-            Die("collision avec Wall");
-        }
-    }
-
-    void CheckSelfCollision()
-    {
-        Vector3 headPos = segments[0].position;
-
-        for (int i = 1; i < segments.Count; i++)
-        {
-            if (segments[i].position == headPos)
-            {
-                Die("collision avec soi-même");
-            }
-        }
+        return gridPositions.Contains(new Vector2Int(x, y));
     }
 
     void Die(string reason)
     {
-        UnityEngine.Debug.Log("GAME OVER (" + reason + ")");
-
+        Debug.Log("GAME OVER (" + reason + ")");
         foreach (Transform segment in segments)
-        {
             segment.gameObject.SetActive(false);
-        }
-        Time.timeScale = 0f; 
+
+        Time.timeScale = 0f;
     }
 }

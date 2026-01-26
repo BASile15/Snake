@@ -2,47 +2,50 @@ using UnityEngine;
 
 public class Food : MonoBehaviour
 {
-    public Collider2D gridArea;
+    public Collider2D gridArea; 
     private Snake snake;
-    public Sprite Pomme;
     private SpriteRenderer spriteRenderer;
+
+    public Sprite Pomme;
+
+    public int gridWidth = 17;
+    public int gridHeight = 15;
 
     private void Awake()
     {
-        snake = FindObjectOfType<Snake>();
+        snake = FindFirstObjectByType<Snake>();
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void Start()
     {
-        if (Pomme != null) {
+        if (Pomme != null)
+        {
             spriteRenderer.sprite = Pomme;
         }
-        RandomizePosition();
 
+        RandomizePosition();
     }
 
     public void RandomizePosition()
     {
         Bounds bounds = gridArea.bounds;
 
-        int x = Mathf.RoundToInt(Random.Range(bounds.min.x, bounds.max.x));
-        int y = Mathf.RoundToInt(Random.Range(bounds.min.y, bounds.max.y));
+        float cellWidth = bounds.size.x / gridWidth;
+        float cellHeight = bounds.size.y / gridHeight;
 
-        while (snake.Occupies(x, y))
+        int xIndex;
+        int yIndex;
+
+        do
         {
-            x++;
-
-            if (x > bounds.max.x)
-            {
-                x = Mathf.RoundToInt(bounds.min.x);
-                y++;
-
-                if (y > bounds.max.y) {
-                    y = Mathf.RoundToInt(bounds.min.y);
-                }
-            }
+            xIndex = UnityEngine.Random.Range(0, gridWidth);
+            yIndex = UnityEngine.Random.Range(0, gridHeight);
         }
+        while (snake != null && snake.Occupies(xIndex, yIndex));
+
+        float x = bounds.min.x + cellWidth * (xIndex + 0.5f);
+        float y = bounds.min.y + cellHeight * (yIndex + 0.5f);
 
         transform.position = new Vector2(x, y);
     }
@@ -51,5 +54,4 @@ public class Food : MonoBehaviour
     {
         RandomizePosition();
     }
-
 }
