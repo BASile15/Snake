@@ -303,6 +303,13 @@ MonoBehaviour:
   headUp: {fileID: -3252757596025353577, guid: eb5940d7d5e110f4195c4e78416fb16f, type: 3}
   headLeft: {fileID: -6702244069390154853, guid: d1c4785b871bf0f4c84a75b79e8f2593, type: 3}
   headDown: {fileID: -6854801067047936884, guid: 096a6e5ef47074349954a29e6981eb51, type: 3}
+  bodyHorizontal: {fileID: 0}
+  bodyVertical: {fileID: 0}
+  tailUp: {fileID: 0}
+  tailDown: {fileID: 0}
+  tailLeft: {fileID: 0}
+  tailRight: {fileID: 0}
+  segmentPrefab: {fileID: 0}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
