@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 public class Snake : MonoBehaviour
 {
-    private Vector2 direction = Vector2.right;
+    private Vector2 direction = Vector2.right; // direction initiale
 
     [SerializeField] private float moveDelay = 0.25f;
     private float timer;
@@ -34,27 +34,48 @@ public class Snake : MonoBehaviour
     void Start()
     {
         headRenderer = GetComponent<SpriteRenderer>();
+        headRenderer.sortingOrder = 2; // tête toujours devant
 
         InitSnake();
+
+        // Corps et queue derrière la tête
+        for (int i = 1; i < segments.Count; i++)
+        {
+            SpriteRenderer sr = segments[i].GetComponent<SpriteRenderer>();
+            sr.sortingOrder = 1; // corps et queue derrière la tête
+        }
     }
+
 
     void InitSnake()
     {
         segments.Clear();
         segments.Add(transform); // tête
 
-        headRenderer.sprite = headRight;
+        // Définir le sprite de la tête selon direction initiale
+        UpdateHeadSprite();
 
         Vector3 startPos = transform.position;
 
-        // Corps 1
-        segments.Add(CreateSegment(startPos + Vector3.left, bodyHorizontal));
+        // Création des segments du corps et queue dynamiquement selon direction
+        for (int i = 1; i <= 3; i++)
+        {
+            Vector3 pos = startPos - new Vector3(direction.x * i, direction.y * i, 0f);
+            Sprite sprite;
 
-        // Corps 2
-        segments.Add(CreateSegment(startPos + Vector3.left * 2, bodyHorizontal));
+            // 3ème segment = queue
+            if (i == 3)
+            {
+                sprite = GetTailSprite();
+            }
+            else
+            {
+                // Corps : horizontal si X != 0 sinon vertical
+                sprite = (Mathf.Abs(direction.x) > 0) ? bodyHorizontal : bodyVertical;
+            }
 
-        // Queue
-        segments.Add(CreateSegment(startPos + Vector3.left * 3, tailLeft));
+            segments.Add(CreateSegment(pos, sprite));
+        }
     }
 
     Transform CreateSegment(Vector3 position, Sprite sprite)
@@ -71,23 +92,39 @@ public class Snake : MonoBehaviour
         if (keyboard.wKey.wasPressedThisFrame && direction != Vector2.down)
         {
             direction = Vector2.up;
-            headRenderer.sprite = headUp;
+            UpdateHeadSprite();
         }
         else if (keyboard.sKey.wasPressedThisFrame && direction != Vector2.up)
         {
             direction = Vector2.down;
-            headRenderer.sprite = headDown;
+            UpdateHeadSprite();
         }
         else if (keyboard.aKey.wasPressedThisFrame && direction != Vector2.right)
         {
             direction = Vector2.left;
-            headRenderer.sprite = headLeft;
+            UpdateHeadSprite();
         }
         else if (keyboard.dKey.wasPressedThisFrame && direction != Vector2.left)
         {
             direction = Vector2.right;
-            headRenderer.sprite = headRight;
+            UpdateHeadSprite();
         }
+    }
+
+    void UpdateHeadSprite()
+    {
+        if (direction == Vector2.right) headRenderer.sprite = headRight;
+        else if (direction == Vector2.left) headRenderer.sprite = headLeft;
+        else if (direction == Vector2.up) headRenderer.sprite = headUp;
+        else if (direction == Vector2.down) headRenderer.sprite = headDown;
+    }
+
+    Sprite GetTailSprite()
+    {
+        if (direction == Vector2.right) return tailLeft;  // queue regarde vers la tête
+        else if (direction == Vector2.left) return tailRight;
+        else if (direction == Vector2.up) return tailDown;
+        else return tailUp;
     }
 
     void FixedUpdate()
@@ -103,23 +140,53 @@ public class Snake : MonoBehaviour
 
     void Move()
     {
-        for (int i = segments.Count - 1; i > 0; i--)
-        {
-            segments[i].position = segments[i - 1].position;
-        }
+        // Stocke la position actuelle des segments
+        Vector3 prevPos = segments[0].position;
+        Vector3 nextPos;
 
-        transform.position = new Vector3(
+        // Déplacement de la tête
+        segments[0].position = new Vector3(
             Mathf.Round(transform.position.x) + direction.x,
             Mathf.Round(transform.position.y) + direction.y,
             0f
         );
+
+        // Déplacement du corps
+        for (int i = 1; i < segments.Count; i++)
+        {
+            nextPos = segments[i].position;
+            segments[i].position = prevPos;
+
+            // Gestion sprite du corps
+            SpriteRenderer sr = segments[i].GetComponent<SpriteRenderer>();
+
+            if (i == segments.Count - 1)
+            {
+                // Queue
+                Vector3 diff = segments[i - 1].position - segments[i].position;
+                if (diff.x > 0) sr.sprite = tailLeft;
+                else if (diff.x < 0) sr.sprite = tailRight;
+                else if (diff.y > 0) sr.sprite = tailDown;
+                else sr.sprite = tailUp;
+            }
+            else
+            {
+                // Corps
+                Vector3 diff = segments[i + 1].position - segments[i].position;
+                if (Mathf.Abs(diff.x) > 0) sr.sprite = bodyHorizontal;
+                else sr.sprite = bodyVertical;
+            }
+
+            prevPos = nextPos;
+        }
     }
+
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Wall"))
         {
-            UnityEngine.Debug.Log("GAME OVER 💀");
+            UnityEngine.Debug.Log("GAME OVER");
             gameObject.SetActive(false);
             Time.timeScale = 0f;
         }

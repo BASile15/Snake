@@ -303,13 +303,13 @@ MonoBehaviour:
   headUp: {fileID: -3252757596025353577, guid: eb5940d7d5e110f4195c4e78416fb16f, type: 3}
   headLeft: {fileID: -6702244069390154853, guid: d1c4785b871bf0f4c84a75b79e8f2593, type: 3}
   headDown: {fileID: -6854801067047936884, guid: 096a6e5ef47074349954a29e6981eb51, type: 3}
-  bodyHorizontal: {fileID: 0}
-  bodyVertical: {fileID: 0}
-  tailUp: {fileID: 0}
-  tailDown: {fileID: 0}
-  tailLeft: {fileID: 0}
-  tailRight: {fileID: 0}
-  segmentPrefab: {fileID: 0}
+  bodyHorizontal: {fileID: 5183476676852997877, guid: d93fe5e193b80f74986c3d2341821bda, type: 3}
+  bodyVertical: {fileID: -8697133744877224016, guid: 1cfbe813156d0af42a62f64102aa2002, type: 3}
+  tailUp: {fileID: 2750249231403333431, guid: e14df5c8680729242b87a6c21238528f, type: 3}
+  tailDown: {fileID: -444241385568439413, guid: 4a87422bb9ad0b64ba08c8ea39617857, type: 3}
+  tailLeft: {fileID: -2542272835747916194, guid: 18c6fa690f70df042bba0f8a48c8a9bc, type: 3}
+  tailRight: {fileID: -6108097152939252179, guid: 140d015e8e6342747b76d26281436cef, type: 3}
+  segmentPrefab: {fileID: 5233612779200566629, guid: 31c5a4bbe04793b418a1f1ab5dcf2475, type: 3}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
