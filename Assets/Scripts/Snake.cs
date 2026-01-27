@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;
 
 public class Snake : MonoBehaviour
 {
@@ -8,6 +9,10 @@ public class Snake : MonoBehaviour
     public Collider2D gridArea;
     public int gridWidth = 17;
     public int gridHeight = 15;
+
+    [Header("UI")]
+    public TextMeshProUGUI scoreText;
+    private int score;
 
     private Vector2Int direction = Vector2Int.right;
     private Vector2Int headGridPos;
@@ -46,7 +51,9 @@ public class Snake : MonoBehaviour
     {
         headRenderer = GetComponent<SpriteRenderer>();
         headRenderer.sortingOrder = 10;
+        score = 0;
 
+        UpdateScoreUI();
         InitSnake();
     }
 
@@ -219,5 +226,35 @@ public class Snake : MonoBehaviour
             segment.gameObject.SetActive(false);
 
         Time.timeScale = 0f;
+    }
+
+    private void Grow()
+    {
+        Vector2Int lastGridPos = gridPositions[gridPositions.Count - 1];
+        GameObject newSegment = Instantiate(this.segmentPrefab, GridToWorld(lastGridPos), Quaternion.identity);
+        newSegment.GetComponent<SpriteRenderer>().sortingOrder = 9;
+        segments.Add(newSegment.transform);
+        gridPositions.Add(lastGridPos);
+        score += 1;
+
+        UpdateScoreUI();
+        UpdateBodySprites();
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Food"))
+        {
+            Grow();
+        }
+
+    }
+
+    void UpdateScoreUI()
+    {
+        if (scoreText != null)
+        {
+            scoreText.text = ""+score;
+        }
     }
 }
