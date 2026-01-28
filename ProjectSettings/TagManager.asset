@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Wall
   - Food
+  - Snake
   layers:
   - Default
   - TransparentFX
