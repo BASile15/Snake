@@ -41,6 +41,8 @@ public class Snake : MonoBehaviour
     private List<Transform> segments = new List<Transform>();
     private List<Vector2Int> gridPositions = new List<Vector2Int>();
 
+    public GameOverScreen GameOverScreen;
+
     void Start()
     {
         headRenderer = GetComponent<SpriteRenderer>();
@@ -182,6 +184,8 @@ public class Snake : MonoBehaviour
         
         Time.timeScale = 0f;
         UpdateLeaderboardUI();
+
+        GameOverScreen.Setup(score, highscore);
     }
 
     private void Grow()
