@@ -13,7 +13,6 @@ public class Snake : MonoBehaviour
     [Header("UI")]
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI highscoreText;
-    public TextMeshProUGUI leaderboardDisplay;
     
     private int score;
     private int highscore;
@@ -49,12 +48,9 @@ public class Snake : MonoBehaviour
         headRenderer.sortingOrder = 10;
         score = 0;
         
-        // On charge les données via le SaveManager
-        SaveData data = SaveManager.LoadData();
-        highscore = data.highscore;
+        highscore = SaveManager.LoadData().highscore;
 
         UpdateScoreUI();
-        UpdateLeaderboardUI();
         InitSnake();
     }
 
@@ -178,13 +174,8 @@ public class Snake : MonoBehaviour
     void Die(string reason)
     {
         Debug.Log("GAME OVER (" + reason + ")");
-        
-        // On délègue la sauvegarde au manager
-        SaveManager.SaveScore(score);
-        
+        SaveManager.SaveScore(score);       
         Time.timeScale = 0f;
-        UpdateLeaderboardUI();
-
         GameOverScreen.Setup(score, highscore);
     }
 
@@ -206,15 +197,5 @@ public class Snake : MonoBehaviour
     {
         if (scoreText != null) scoreText.text = "Score: " + score;
         if (highscoreText != null) highscoreText.text = "Best: " + highscore;
-    }
-
-    public void UpdateLeaderboardUI() {
-        if (leaderboardDisplay == null) return;
-
-        SaveData data = SaveManager.LoadData();
-        leaderboardDisplay.text = "TOP 10 SCORES\n\n";
-        for (int i = 0; i < data.leaderboard.Count; i++) {
-            leaderboardDisplay.text += $"{i + 1}. {data.leaderboard[i].scoreValue} pts ({data.leaderboard[i].date})\n";
-        }
     }
 }

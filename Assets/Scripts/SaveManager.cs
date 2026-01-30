@@ -40,4 +40,15 @@ public static class SaveManager
         if (!File.Exists(Path)) return new SaveData();
         return JsonUtility.FromJson<SaveData>(File.ReadAllText(Path));
     }
+    public static string GetLeaderboardFormatted() {
+        SaveData data = LoadData();
+        if (data.leaderboard == null || data.leaderboard.Count == 0) 
+            return "AUCUN SCORE ENREGISTRÉ";
+
+        string text = "TOP 10 SCORES\n\n";
+        for (int i = 0; i < data.leaderboard.Count; i++) {
+            text += $"{i + 1}. {data.leaderboard[i].scoreValue} pts ({data.leaderboard[i].date})\n";
+        }
+        return text;
+    }
 }
