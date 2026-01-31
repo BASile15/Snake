@@ -46,8 +46,16 @@ public class Bonus : MonoBehaviour
 
     public void settleRandomBonus()
     {
-        //eaten = false;
-        bonusIndex = UnityEngine.Random.Range(0, 2);
+        float chance = UnityEngine.Random.value;
+
+        if (chance < 0.6f)
+        {
+            bonusIndex = 1;
+        }
+        else
+        {
+            bonusIndex = 0;
+        }
 
         if (bonusIndex == 1)
         {
@@ -66,6 +74,7 @@ public class Bonus : MonoBehaviour
 
         RandomizePosition();
     }
+
 
     public void RandomizePosition()
     {
