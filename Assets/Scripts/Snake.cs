@@ -40,6 +40,12 @@ public class Snake : MonoBehaviour
     private List<Transform> segments = new List<Transform>();
     private List<Vector2Int> gridPositions = new List<Vector2Int>();
 
+    private bool activeBonus;
+    public float bonusTime = 15.0f;
+
+    private Queue<Vector2Int> inputBuffer = new Queue<Vector2Int>();
+    private const int maxBufferSize = 2;
+
     public GameOverScreen GameOverScreen;
 
     void Start()
@@ -47,7 +53,8 @@ public class Snake : MonoBehaviour
         headRenderer = GetComponent<SpriteRenderer>();
         headRenderer.sortingOrder = 10;
         score = 0;
-        
+        activeBonus = false;
+
         highscore = SaveManager.LoadData().highscore;
 
         UpdateScoreUI();
@@ -86,12 +93,24 @@ public class Snake : MonoBehaviour
     void Update()
     {
         var keyboard = Keyboard.current;
-        if (keyboard == null) return;
+        if (keyboard == null ) return;
 
-        if (keyboard.wKey.wasPressedThisFrame && direction != Vector2Int.down) direction = Vector2Int.up;
-        else if (keyboard.sKey.wasPressedThisFrame && direction != Vector2Int.up) direction = Vector2Int.down;
-        else if (keyboard.aKey.wasPressedThisFrame && direction != Vector2Int.right) direction = Vector2Int.left;
-        else if (keyboard.dKey.wasPressedThisFrame && direction != Vector2Int.left) direction = Vector2Int.right;
+        Vector2Int lastQueuedDir = inputBuffer.Count > 0 ? inputBuffer.ToArray()[inputBuffer.Count - 1] : direction;
+
+        if (keyboard.wKey.wasPressedThisFrame && lastQueuedDir != Vector2Int.down && inputBuffer.Count < maxBufferSize) inputBuffer.Enqueue(Vector2Int.up);
+        else if (keyboard.sKey.wasPressedThisFrame && lastQueuedDir != Vector2Int.up && inputBuffer.Count < maxBufferSize) inputBuffer.Enqueue(Vector2Int.down);
+        else if (keyboard.aKey.wasPressedThisFrame && lastQueuedDir != Vector2Int.right && inputBuffer.Count < maxBufferSize) inputBuffer.Enqueue(Vector2Int.left);
+        else if (keyboard.dKey.wasPressedThisFrame && lastQueuedDir != Vector2Int.left && inputBuffer.Count < maxBufferSize) inputBuffer.Enqueue(Vector2Int.right);
+
+        if (activeBonus)
+        {
+            bonusTime -= Time.deltaTime;
+
+            if (bonusTime <= 0.0f)
+            {
+                timerEnded();
+            }
+        }
         
         UpdateHeadSprite();
     }
@@ -104,6 +123,11 @@ public class Snake : MonoBehaviour
 
     void Move()
     {
+        if (inputBuffer.Count > 0)
+        {
+            direction = inputBuffer.Dequeue();
+        }
+
         Vector2Int newHeadPos = headGridPos + direction;
         if (newHeadPos.x < 0 || newHeadPos.x >= gridWidth || newHeadPos.y < 0 || newHeadPos.y >= gridHeight) { Die("mur"); return; }
         if (gridPositions.Contains(newHeadPos)) { Die("soi-même"); return; }
@@ -144,26 +168,40 @@ public class Snake : MonoBehaviour
 
     void UpdateBodySprites()
     {
+        // 1. Gérer uniquement le CORPS (on s'arrête strictement AVANT le dernier segment)
         for (int i = 1; i < segments.Count - 1; i++)
         {
             SpriteRenderer sr = segments[i].GetComponent<SpriteRenderer>();
-            Vector2Int prev = gridPositions[i - 1]; Vector2Int curr = gridPositions[i]; Vector2Int next = gridPositions[i + 1];
-            Vector2Int dirPrev = curr - prev; Vector2Int dirNext = next - curr;
+            Vector2Int prev = gridPositions[i - 1];
+            Vector2Int curr = gridPositions[i];
+            Vector2Int next = gridPositions[i + 1];
+
+            Vector2Int dirPrev = curr - prev;
+            Vector2Int dirNext = next - curr;
 
             if (dirPrev.x != 0 && dirNext.x != 0) sr.sprite = bodyHorizontal;
             else if (dirPrev.y != 0 && dirNext.y != 0) sr.sprite = bodyVertical;
-            else {
-                if (dirPrev.x == 1 && dirNext.y == 1 || dirPrev.y == -1 && dirNext.x == -1) sr.sprite = bodyTopLeft;
-                else if (dirPrev.x == -1 && dirNext.y == 1 || dirPrev.y == -1 && dirNext.x == 1) sr.sprite = bodyTopRight;
-                else if (dirPrev.x == 1 && dirNext.y == -1 || dirPrev.y == 1 && dirNext.x == -1) sr.sprite = bodyBottomLeft;
+            else
+            {
+                // Logique des virages
+                if ((dirPrev.x == 1 && dirNext.y == 1) || (dirPrev.y == -1 && dirNext.x == -1)) sr.sprite = bodyTopLeft;
+                else if ((dirPrev.x == -1 && dirNext.y == 1) || (dirPrev.y == -1 && dirNext.x == 1)) sr.sprite = bodyTopRight;
+                else if ((dirPrev.x == 1 && dirNext.y == -1) || (dirPrev.y == 1 && dirNext.x == -1)) sr.sprite = bodyBottomLeft;
                 else sr.sprite = bodyBottomRight;
             }
         }
-        int last = segments.Count - 1;
-        SpriteRenderer tailSR = segments[last].GetComponent<SpriteRenderer>();
-        Vector2Int diff = gridPositions[last - 1] - gridPositions[last];
-        if (diff.x == 1) tailSR.sprite = tailLeft; else if (diff.x == -1) tailSR.sprite = tailRight;
-        else if (diff.y == 1) tailSR.sprite = tailDown; else tailSR.sprite = tailUp;
+
+        // 2. Gérer uniquement la QUEUE (on force le sprite de queue sur le dernier élément)
+        int lastIndex = segments.Count - 1;
+        SpriteRenderer tailSR = segments[lastIndex].GetComponent<SpriteRenderer>();
+
+        // Calcul de direction entre l'avant-dernier et le dernier
+        Vector2Int diff = gridPositions[lastIndex - 1] - gridPositions[lastIndex];
+
+        if (diff.x == 1) tailSR.sprite = tailLeft;
+        else if (diff.x == -1) tailSR.sprite = tailRight;
+        else if (diff.y == 1) tailSR.sprite = tailDown;
+        else if (diff.y == -1) tailSR.sprite = tailUp;
     }
 
     public bool Occupies(int x, int y)
@@ -182,13 +220,15 @@ public class Snake : MonoBehaviour
     private void Grow()
     {
         Vector2Int lastGridPos = gridPositions[gridPositions.Count - 1];
-        GameObject newSegment = Instantiate(this.segmentPrefab, GridToWorld(lastGridPos), Quaternion.identity);
+        Sprite currentTailSprite = segments[segments.Count - 1].GetComponent<SpriteRenderer>().sprite;
+        Transform newSegment = CreateSegment(GridToWorld(lastGridPos), currentTailSprite);
+
         newSegment.GetComponent<SpriteRenderer>().sortingOrder = 9;
-        segments.Add(newSegment.transform);
+        segments.Add(newSegment);
         gridPositions.Add(lastGridPos);
+
         score += 1;
         UpdateScoreUI();
-        UpdateBodySprites();
     }
 
     private void OnTriggerEnter2D(Collider2D other) { if (other.CompareTag("Food")) Grow(); }
@@ -197,5 +237,24 @@ public class Snake : MonoBehaviour
     {
         if (scoreText != null) scoreText.text = "Score: " + score;
         if (highscoreText != null) highscoreText.text = "Best: " + highscore;
+    }
+
+    public void IncreaseSpeed()
+    {
+        activeBonus = true;
+        moveDelay = 0.10f;
+    }
+
+    public void DecreaseSpeed()
+    {
+        activeBonus = true;
+        moveDelay = 0.5f;
+    }
+
+    void timerEnded()
+    {
+        activeBonus = false;
+        bonusTime = 10f;
+        moveDelay = 0.25f;
     }
 }

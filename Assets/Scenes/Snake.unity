@@ -278,7 +278,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 2, y: 2}
+    oldSize: {x: 1.6666666, y: 1.6666666}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -319,6 +319,7 @@ MonoBehaviour:
   tailLeft: {fileID: -2542272835747916194, guid: 18c6fa690f70df042bba0f8a48c8a9bc, type: 3}
   tailRight: {fileID: -6108097152939252179, guid: 140d015e8e6342747b76d26281436cef, type: 3}
   segmentPrefab: {fileID: 5233612779200566629, guid: 31c5a4bbe04793b418a1f1ab5dcf2475, type: 3}
+  bonusTime: 15
   GameOverScreen: {fileID: 359573972}
 --- !u!1 &57067648
 GameObject:

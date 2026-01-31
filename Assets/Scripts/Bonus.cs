@@ -5,8 +5,14 @@ public class Bonus : MonoBehaviour
 {
     public Collider2D gridArea;
     private Snake snake;
+
     private bool eaten;
-    protected int bonusIndex;
+    private float spawnTime = 25f;
+    private float despawnTime = 10f;
+    private float targetTime;
+    private bool spawnedBonus;
+
+    private int bonusIndex;
     private SpriteRenderer spriteRenderer;
 
     public Sprite FastBoostSprite;
@@ -23,12 +29,24 @@ public class Bonus : MonoBehaviour
 
     private void Start()
     {
-        Invoke("settleRandomBonus", 5f);
+        //Invoke("settleRandomBonus", 5f);
+        targetTime = spawnTime;
+        spawnedBonus = false;
+    }
+
+    void Update()
+    {
+        targetTime -= Time.deltaTime;
+
+        if (targetTime <= 0.0f)
+        {
+            timerEnded();
+        }
     }
 
     public void settleRandomBonus()
     {
-        eaten = false;
+        //eaten = false;
         bonusIndex = UnityEngine.Random.Range(0, 2);
 
         if (bonusIndex == 1)
@@ -76,18 +94,36 @@ public class Bonus : MonoBehaviour
     {
         if (other.CompareTag("Snake"))
         {
-            eaten = true;
+            //eaten = true;
             transform.position = new Vector2(-30, -30);
-            Invoke("settleRandomBonus", 5f);
+            targetTime = spawnTime;
+            spawnedBonus = false;
+
+            if (bonusIndex == 1)
+            {
+                snake.IncreaseSpeed();
+            }
+            else
+            {
+                snake.DecreaseSpeed();
+            }
         }
     }
 
-    private void RespawnBonus()
+    private void timerEnded()
     {
-        if (!eaten)
+        if (spawnedBonus)
         {
             transform.position = new Vector2(-30, -30);
-            Invoke("settleRandomBonus", 7f);
+            spawnedBonus = false;
+            targetTime = spawnTime;
+        }
+        else
+        {
+            settleRandomBonus();
+            spawnedBonus = true;
+            targetTime = despawnTime;
         }
     }
+
 }
