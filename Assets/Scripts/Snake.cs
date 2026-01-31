@@ -48,6 +48,9 @@ public class Snake : MonoBehaviour
 
     public GameOverScreen GameOverScreen;
 
+    private bool hasStarted = false;
+
+
     void Start()
     {
         headRenderer = GetComponent<SpriteRenderer>();
@@ -93,14 +96,43 @@ public class Snake : MonoBehaviour
     void Update()
     {
         var keyboard = Keyboard.current;
-        if (keyboard == null ) return;
+        if (keyboard == null) return;
 
-        Vector2Int lastQueuedDir = inputBuffer.Count > 0 ? inputBuffer.ToArray()[inputBuffer.Count - 1] : direction;
+        Vector2Int lastQueuedDir = inputBuffer.Count > 0
+            ? inputBuffer.ToArray()[inputBuffer.Count - 1]
+            : direction;
 
-        if (keyboard.wKey.wasPressedThisFrame && lastQueuedDir != Vector2Int.down && inputBuffer.Count < maxBufferSize) inputBuffer.Enqueue(Vector2Int.up);
-        else if (keyboard.sKey.wasPressedThisFrame && lastQueuedDir != Vector2Int.up && inputBuffer.Count < maxBufferSize) inputBuffer.Enqueue(Vector2Int.down);
-        else if (keyboard.aKey.wasPressedThisFrame && lastQueuedDir != Vector2Int.right && inputBuffer.Count < maxBufferSize) inputBuffer.Enqueue(Vector2Int.left);
-        else if (keyboard.dKey.wasPressedThisFrame && lastQueuedDir != Vector2Int.left && inputBuffer.Count < maxBufferSize) inputBuffer.Enqueue(Vector2Int.right);
+        bool inputDetected = false;
+
+        if ((keyboard.wKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame)
+            && lastQueuedDir != Vector2Int.down && inputBuffer.Count < maxBufferSize)
+        {
+            inputBuffer.Enqueue(Vector2Int.up);
+            inputDetected = true;
+        }
+        else if ((keyboard.sKey.wasPressedThisFrame || keyboard.downArrowKey.wasPressedThisFrame)
+            && lastQueuedDir != Vector2Int.up && inputBuffer.Count < maxBufferSize)
+        {
+            inputBuffer.Enqueue(Vector2Int.down);
+            inputDetected = true;
+        }
+        else if ((keyboard.aKey.wasPressedThisFrame || keyboard.leftArrowKey.wasPressedThisFrame)
+            && lastQueuedDir != Vector2Int.right && inputBuffer.Count < maxBufferSize)
+        {
+            inputBuffer.Enqueue(Vector2Int.left);
+            inputDetected = true;
+        }
+        else if ((keyboard.dKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame)
+            && lastQueuedDir != Vector2Int.left && inputBuffer.Count < maxBufferSize)
+        {
+            inputBuffer.Enqueue(Vector2Int.right);
+            inputDetected = true;
+        }
+
+        if (inputDetected)
+        {
+            hasStarted = true;
+        }
 
         if (activeBonus)
         {
@@ -111,15 +143,22 @@ public class Snake : MonoBehaviour
                 timerEnded();
             }
         }
-        
+
         UpdateHeadSprite();
     }
 
     void FixedUpdate()
     {
+        if (!hasStarted) return;
+
         timer += Time.fixedDeltaTime;
-        if (timer >= moveDelay) { Move(); timer = 0f; }
+        if (timer >= moveDelay)
+        {
+            Move();
+            timer = 0f;
+        }
     }
+
 
     void Move()
     {
